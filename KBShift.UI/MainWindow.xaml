@@ -93,10 +93,21 @@
 
     <Border BorderBrush="#333333" BorderThickness="1">
         <StackPanel Margin="30">
-            <TextBlock Text="Configuration" FontSize="28" FontWeight="Bold" Margin="0,0,0,30" HorizontalAlignment="Left" Foreground="#FFFFFF"/>
+            <Grid Margin="0,0,0,30">
+                <TextBlock Text="Configuration" FontSize="28" FontWeight="Bold" HorizontalAlignment="Left" Foreground="#FFFFFF"/>
+                <Button Content="⌨ OSK" HorizontalAlignment="Right" VerticalAlignment="Center" 
+                        Padding="10,5" Background="#1E1E1E" Foreground="#BB86FC" BorderBrush="#333" 
+                        Click="OskButton_Click" Cursor="Hand" ToolTip="Open On-Screen Keyboard">
+                    <Button.Resources>
+                        <Style TargetType="Border">
+                            <Setter Property="CornerRadius" Value="4"/>
+                        </Style>
+                    </Button.Resources>
+                </Button>
+            </Grid>
 
             <!-- Group 1 -->
-            <TextBlock Text="Group 1 (Left Alt + Shift)" Foreground="#BB86FC" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+            <TextBlock Text="Group 1" Foreground="#BB86FC" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
             
             <TextBlock Text="Trigger Trigger" Foreground="#AAAAAA" FontSize="14" Margin="0,0,0,5"/>
             <ComboBox x:Name="Group1TriggerCombo" SelectionChanged="Group1TriggerCombo_SelectionChanged" 
@@ -133,7 +144,7 @@
             <Separator Background="#333" Margin="0,30,0,30"/>
 
             <!-- Group 2 -->
-            <TextBlock Text="Group 2 (Right Alt + Shift)" Foreground="#BB86FC" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
+            <TextBlock Text="Group 2" Foreground="#BB86FC" FontSize="18" FontWeight="SemiBold" Margin="0,0,0,15"/>
             
             <TextBlock Text="Trigger Trigger" Foreground="#AAAAAA" FontSize="14" Margin="0,0,0,5"/>
             <ComboBox x:Name="Group2TriggerCombo" SelectionChanged="Group2TriggerCombo_SelectionChanged" 
@@ -166,6 +177,17 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
+
+            <!-- About Section -->
+            <Separator Background="#333" Margin="0,40,0,20"/>
+            <Expander Header="About KBShift" Foreground="#AAAAAA" FontSize="14">
+                <StackPanel Margin="10,10,0,0">
+                    <TextBlock Text="KBShift v1.0.0" Foreground="#FFFFFF" FontWeight="SemiBold" Margin="0,0,0,5"/>
+                    <TextBlock Text="A lightweight utility to cycle keyboard languages using customizable modifiers." Foreground="#888" TextWrapping="Wrap" Margin="0,0,0,15"/>
+                    
+                    <TextBlock Text="Developed by: Koryun Gaboyan" Foreground="#AAAAAA" Margin="0,0,0,2"/>
+                </StackPanel>
+            </Expander>
         </StackPanel>
     </Border>
 </Window>

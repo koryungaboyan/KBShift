@@ -1,8 +1,11 @@
 ﻿using KBShift.Core.Models;
 using KBShift.Core.Services;
+using Microsoft.Win32;
 using System;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
@@ -26,6 +29,7 @@ public partial class MainWindow : Window
     private readonly KeyboardHookService _hookService;
     private readonly TrayIconController _tray;
     private bool _canClose = false;
+    private const string AppName = "KBShift";
 
     public MainWindow()
     {
@@ -44,7 +48,9 @@ public partial class MainWindow : Window
     
     private void InitializeTriggers()
     {
-        var triggers = Enum.GetValues<ShortcutType>();
+        var triggers = Enum.GetValues<ShortcutType>()
+                           .Where(t => t != ShortcutType.None)
+                           .ToList();
         Group1TriggerCombo.ItemsSource = triggers;
         Group2TriggerCombo.ItemsSource = triggers;
         
@@ -73,7 +79,21 @@ public partial class MainWindow : Window
         }
     }
 
-
+    private void OskButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "osk.exe",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            System.Windows.MessageBox.Show($"Could not start OSK: {ex.Message}", "KBShift", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
 
     protected override void OnClosing(CancelEventArgs e)
     {
