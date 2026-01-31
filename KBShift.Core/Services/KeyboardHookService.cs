@@ -252,12 +252,56 @@ public class KeyboardHookService : IDisposable
         }
         else
         {
-            // If not found in our list, start from the first one
             targetLang = targetList[0];
         }
 
+        // Fix for Win+R and similar: Send to focused control if possible
+        var focusHwnd = GetFocusedHandle(threadId);
+        if (focusHwnd != IntPtr.Zero)
+        {
+            PostMessage(focusHwnd, WM_INPUTLANGCHANGEREQUEST, IntPtr.Zero, targetLang.Handle);
+        }
+        
+        // Also send to main window as fallback
         PostMessage(targetHwnd, WM_INPUTLANGCHANGEREQUEST, IntPtr.Zero, targetLang.Handle);
     }
+
+    private IntPtr GetFocusedHandle(uint threadId)
+    {
+        var info = new GUITHREADINFO();
+        info.cbSize = (uint)Marshal.SizeOf(info);
+        if (GetGUIThreadInfo(threadId, ref info))
+        {
+            return info.hwndFocus;
+        }
+        return IntPtr.Zero;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct RECT
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct GUITHREADINFO
+    {
+        public uint cbSize;
+        public uint flags;
+        public IntPtr hwndActive;
+        public IntPtr hwndFocus;
+        public IntPtr hwndCapture;
+        public IntPtr hwndMenuOwner;
+        public IntPtr hwndMoveSize;
+        public IntPtr hwndCaret;
+        public RECT rcCaret;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern bool GetGUIThreadInfo(uint idThread, ref GUITHREADINFO lpgui);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     private static extern IntPtr SetWindowsHookEx(int idHook, LowLevelKeyboardProc lpfn, IntPtr hMod, uint dwThreadId);

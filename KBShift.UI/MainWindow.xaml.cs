@@ -79,19 +79,37 @@ public partial class MainWindow : Window
         }
     }
 
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool Wow64DisableWow64FsRedirection(ref IntPtr ptr);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool Wow64RevertWow64FsRedirection(IntPtr ptr);
+
     private void OskButton_Click(object sender, RoutedEventArgs e)
     {
+        IntPtr ptr = IntPtr.Zero;
         try
         {
+            // Bypass redirection to ensure we find the real 64-bit osk.exe in System32
+            Wow64DisableWow64FsRedirection(ref ptr);
+            
             Process.Start(new ProcessStartInfo
             {
                 FileName = "osk.exe",
-                UseShellExecute = true
+                UseShellExecute = true,
+                Verb = "open"
             });
         }
         catch (Exception ex)
         {
             System.Windows.MessageBox.Show($"Could not start OSK: {ex.Message}", "KBShift", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            if (ptr != IntPtr.Zero)
+            {
+                Wow64RevertWow64FsRedirection(ptr);
+            }
         }
     }
 
