@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="KBShift.Core/KBShift.Core.csproj" />
+  <Project Path="KBShift.UI/KBShift.UI.csproj" />
+</Solution>
