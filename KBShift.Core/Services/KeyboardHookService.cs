@@ -6,7 +6,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
-namespace KBShift.Core.Services;
+namespace KBShift.Core.Services
+{
 
 public class KeyboardHookService : IDisposable
 {
@@ -33,8 +34,8 @@ public class KeyboardHookService : IDisposable
 
     // Thread-safe access to configuration
     private readonly object _configLock = new object();
-    private List<InputLanguage> _leftLangs = new();
-    private List<InputLanguage> _rightLangs = new();
+    private List<InputLanguage> _leftLangs = new List<InputLanguage>();
+    private List<InputLanguage> _rightLangs = new List<InputLanguage>();
     private ShortcutType _group1Trigger = ShortcutType.LeftAltShift;
     private ShortcutType _group2Trigger = ShortcutType.RightAltShift;
     
@@ -73,9 +74,13 @@ public class KeyboardHookService : IDisposable
 
     private IntPtr SetHook(LowLevelKeyboardProc proc)
     {
-        using var curProcess = Process.GetCurrentProcess();
-        using var curModule = curProcess.MainModule;
-        return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(null), 0);
+        using (var curProcess = Process.GetCurrentProcess())
+        {
+            using (var curModule = curProcess.MainModule)
+            {
+                return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(IntPtr.Zero), 0);
+            }
+        }
     }
 
     private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
@@ -269,7 +274,7 @@ public class KeyboardHookService : IDisposable
     private IntPtr GetFocusedHandle(uint threadId)
     {
         var info = new GUITHREADINFO();
-        info.cbSize = (uint)Marshal.SizeOf(info);
+        info.cbSize = (uint)Marshal.SizeOf(typeof(GUITHREADINFO));
         if (GetGUIThreadInfo(threadId, ref info))
         {
             return info.hwndFocus;
@@ -314,7 +319,7 @@ public class KeyboardHookService : IDisposable
     private static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
     [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr GetModuleHandle(string? lpModuleName);
+    private static extern IntPtr GetModuleHandle(IntPtr lpModuleName);
 
     [DllImport("user32.dll")]
     private static extern IntPtr GetForegroundWindow();
@@ -333,4 +338,5 @@ public class KeyboardHookService : IDisposable
 
     [DllImport("user32.dll")]
     private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
+    }
 }

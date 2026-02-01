@@ -1,6 +1,8 @@
-﻿using System.Runtime.InteropServices;
+﻿using System;
+using System.Runtime.InteropServices;
 
-namespace KBShift.Core.Services;
+namespace KBShift.Core.Services
+{
 
 public class HotkeyService
 {
@@ -15,5 +17,6 @@ public class HotkeyService
     {
         RegisterHotKey(handle, 9001, MOD_ALT | MOD_SHIFT | MOD_NOREPEAT, 0x00);
         RegisterHotKey(handle, 9002, MOD_ALT | MOD_SHIFT | MOD_NOREPEAT, 0x00);
+    }
     }
 }

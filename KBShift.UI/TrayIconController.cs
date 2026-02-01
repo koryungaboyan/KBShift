@@ -1,18 +1,27 @@
-﻿using System.Windows.Forms;
+﻿using System;
+using System.Windows.Forms;
 using System.Drawing;
+using System.Diagnostics;
 
-namespace KBShift.UI;
+namespace KBShift.UI
+{
 
 public class TrayIconController
 {
-    private NotifyIcon? _trayIcon;
+    private NotifyIcon _trayIcon;
 
     public void Initialize(Action onShow, Action onExit)
     {
+        Icon appIcon = null;
+        try
+        {
+            appIcon = Icon.ExtractAssociatedIcon(Process.GetCurrentProcess().MainModule?.FileName ?? "");
+        }
+        catch { }
+
         _trayIcon = new NotifyIcon
         {
-            // Using a built-in system icon to bypass file path issues
-            Icon = SystemIcons.Shield,
+            Icon = appIcon ?? SystemIcons.Shield,
             Visible = true,
             Text = "KBShift Active"
         };
@@ -27,5 +36,6 @@ public class TrayIconController
             onExit?.Invoke();
         });
         _trayIcon.ContextMenuStrip = menu;
+    }
     }
 }

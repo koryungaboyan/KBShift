@@ -2,11 +2,12 @@
 using System.Threading;
 using WinForms = System.Windows.Forms;
 
-namespace KBShift.UI;
+namespace KBShift.UI
+{
 
 public partial class App : System.Windows.Application
 {
-    private static Mutex? _mutex;
+    private static Mutex _mutex;
     private static bool _ownsMutex;
 
     protected override void OnStartup(StartupEventArgs e)
@@ -29,11 +30,15 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
-        if (_ownsMutex)
+        if (_ownsMutex && _mutex != null)
         {
-            _mutex?.ReleaseMutex();
+            _mutex.ReleaseMutex();
         }
-        _mutex?.Dispose();
+        if (_mutex != null)
+        {
+            _mutex.Dispose();
+        }
         base.OnExit(e);
+    }
     }
 }

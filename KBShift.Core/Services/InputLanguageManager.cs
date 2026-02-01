@@ -1,6 +1,8 @@
-﻿using System.Windows.Forms;
+﻿using System.Linq;
+using System.Windows.Forms;
 
-namespace KBShift.Core.Services;
+namespace KBShift.Core.Services
+{
 
 public class InputLanguageManager
 {
@@ -11,5 +13,6 @@ public class InputLanguageManager
             .FirstOrDefault(l => l.Culture.EnglishName.Contains(name));
 
         if (lang != null) InputLanguage.CurrentInputLanguage = lang;
+    }
     }
 }

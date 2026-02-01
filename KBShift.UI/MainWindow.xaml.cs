@@ -10,7 +10,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Forms;
 
-namespace KBShift.UI;
+namespace KBShift.UI
+{
 
 public class LanguageViewModel
 {
@@ -28,17 +29,30 @@ public partial class MainWindow : Window
 {
     private readonly KeyboardHookService _hookService;
     private readonly TrayIconController _tray;
+    private readonly SettingsService _settingsService;
+    private AppSettings _settings;
     private bool _canClose = false;
+    private bool _isInitializing = true;
     private const string AppName = "KBShift";
 
     public MainWindow()
     {
         InitializeComponent();
+        
+        _settingsService = new SettingsService();
+        _settings = _settingsService.Load();
         _hookService = new KeyboardHookService();
         _tray = new TrayIconController();
-        InitializeLanguages();
-        InitializeTriggers();
+
+        // Apply dynamic theme
+        ThemeController.ApplyTheme();
+        ThemeController.WatchTheme();
         
+        InitializeTriggers();
+        InitializeLanguages();
+        
+        _isInitializing = false;
+
         // Initialize Tray immediately
         _tray.Initialize(
             onShow: () => { this.Show(); this.Activate(); }, 
@@ -48,14 +62,18 @@ public partial class MainWindow : Window
     
     private void InitializeTriggers()
     {
-        var triggers = Enum.GetValues<ShortcutType>()
+        var triggers = Enum.GetValues(typeof(ShortcutType))
+                           .Cast<ShortcutType>()
                            .Where(t => t != ShortcutType.None)
                            .ToList();
         Group1TriggerCombo.ItemsSource = triggers;
         Group2TriggerCombo.ItemsSource = triggers;
         
-        Group1TriggerCombo.SelectedItem = ShortcutType.LeftAltShift;
-        Group2TriggerCombo.SelectedItem = ShortcutType.RightAltShift;
+        Group1TriggerCombo.SelectedItem = _settings.Group1Trigger;
+        Group2TriggerCombo.SelectedItem = _settings.Group2Trigger;
+        
+        _hookService.Group1Trigger = _settings.Group1Trigger;
+        _hookService.Group2Trigger = _settings.Group2Trigger;
     }
 
     private void InitializeLanguages()
@@ -67,16 +85,87 @@ public partial class MainWindow : Window
         LeftLangCombo.ItemsSource = languages;
         RightLangCombo.ItemsSource = languages;
         
-        // Default Selections
-        if (languages.Any())
+        // Handle Defaults or Loaded Settings
+        if (_settings.Group1Langs.Contains("__ALL__"))
         {
-             // Try to select English for Left by default
-             var english = languages.FirstOrDefault(l => l.Language.Culture.EnglishName.Contains("English"));
-             if (english != null) LeftLangCombo.SelectedItems.Add(english);
-             
-             // Select last one for Right.
-             if (languages.Count > 1) RightLangCombo.SelectedItems.Add(languages.Last());
+            // First run: Group 1 gets ALL, Group 2 gets NONE
+            foreach (var lang in languages)
+            {
+                LeftLangCombo.SelectedItems.Add(lang);
+            }
+            // Right remains empty
         }
+        else
+        {
+            // Load saved selections
+            foreach (var lang in languages)
+            {
+                if (_settings.Group1Langs.Contains(lang.Language.Culture.Name))
+                    LeftLangCombo.SelectedItems.Add(lang);
+                    
+                if (_settings.Group2Langs.Contains(lang.Language.Culture.Name))
+                    RightLangCombo.SelectedItems.Add(lang);
+            }
+        }
+        
+        UpdateHookServiceLangs();
+    }
+
+    private void SaveSettings()
+    {
+        if (_isInitializing) return;
+
+        _settings.Group1Trigger = (ShortcutType)Group1TriggerCombo.SelectedItem;
+        _settings.Group2Trigger = (ShortcutType)Group2TriggerCombo.SelectedItem;
+        
+        _settings.Group1Langs = LeftLangCombo.SelectedItems.Cast<LanguageViewModel>()
+                                             .Select(vm => vm.Language.Culture.Name)
+                                             .ToList();
+                                             
+        _settings.Group2Langs = RightLangCombo.SelectedItems.Cast<LanguageViewModel>()
+                                             .Select(vm => vm.Language.Culture.Name)
+                                             .ToList();
+                                             
+        _settingsService.Save(_settings);
+    }
+
+    private void Group1TriggerCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        _hookService.Group1Trigger = (ShortcutType)Group1TriggerCombo.SelectedItem;
+        SaveSettings();
+    }
+
+    private void Group2TriggerCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        _hookService.Group2Trigger = (ShortcutType)Group2TriggerCombo.SelectedItem;
+        SaveSettings();
+    }
+
+    private void LeftLangCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateHookServiceLangs();
+        SaveSettings();
+    }
+
+    private void RightLangCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isInitializing) return;
+        UpdateHookServiceLangs();
+        SaveSettings();
+    }
+
+    private void UpdateHookServiceLangs()
+    {
+        _hookService.LeftLangs = LeftLangCombo.SelectedItems.Cast<LanguageViewModel>()
+                                              .Select(vm => vm.Language)
+                                              .ToList();
+                                              
+        _hookService.RightLangs = RightLangCombo.SelectedItems.Cast<LanguageViewModel>()
+                                               .Select(vm => vm.Language)
+                                               .ToList();
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]
@@ -90,8 +179,11 @@ public partial class MainWindow : Window
         IntPtr ptr = IntPtr.Zero;
         try
         {
-            // Bypass redirection to ensure we find the real 64-bit osk.exe in System32
-            Wow64DisableWow64FsRedirection(ref ptr);
+            if (Environment.Is64BitOperatingSystem)
+            {
+                // Bypass redirection to ensure we find the real 64-bit osk.exe in System32
+                Wow64DisableWow64FsRedirection(ref ptr);
+            }
             
             Process.Start(new ProcessStartInfo
             {
@@ -126,33 +218,5 @@ public partial class MainWindow : Window
         base.OnClosing(e);
     }
 
-    private void LeftLangCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        _hookService.LeftLangs = LeftLangCombo.SelectedItems.Cast<LanguageViewModel>()
-                                              .Select(vm => vm.Language)
-                                              .ToList();
-    }
-
-    private void RightLangCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        _hookService.RightLangs = RightLangCombo.SelectedItems.Cast<LanguageViewModel>()
-                                               .Select(vm => vm.Language)
-                                               .ToList();
-    }
-
-    private void Group1TriggerCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (Group1TriggerCombo.SelectedItem is ShortcutType type)
-        {
-            _hookService.Group1Trigger = type;
-        }
-    }
-
-    private void Group2TriggerCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
-    {
-        if (Group2TriggerCombo.SelectedItem is ShortcutType type)
-        {
-            _hookService.Group2Trigger = type;
-        }
     }
 }

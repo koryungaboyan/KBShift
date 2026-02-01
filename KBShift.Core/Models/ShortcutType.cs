@@ -1,10 +1,11 @@
-namespace KBShift.Core.Models;
-
-public enum ShortcutType
+namespace KBShift.Core.Models
 {
-    LeftAltShift,
-    RightAltShift,
-    CtrlShift, 
-    CapsLock,
-    None
+    public enum ShortcutType
+    {
+        LeftAltShift,
+        RightAltShift,
+        CtrlShift,
+        CapsLock,
+        None
+    }
 }

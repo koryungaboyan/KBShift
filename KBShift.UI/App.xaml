@@ -3,34 +3,22 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:KBShift.UI">
     <Application.Resources>
-        <SolidColorBrush x:Key="BackgroundBrush" Color="#1E1E1E"/>
-        <SolidColorBrush x:Key="SurfaceBrush" Color="#2D2D2D"/>
-        <SolidColorBrush x:Key="TextBrush" Color="#FFFFFF"/>
-        <SolidColorBrush x:Key="AccentBrush" Color="#007ACC"/>
-        
+        <SolidColorBrush x:Key="WindowBg" Color="#FFFFFF"/>
+        <SolidColorBrush x:Key="PanelBg" Color="#F5F5F5"/>
+        <SolidColorBrush x:Key="ButtonBg" Color="#E0E0E0"/>
+        <SolidColorBrush x:Key="BorderColor" Color="#CCCCCC"/>
+
+        <SolidColorBrush x:Key="PrimaryText" Color="#1A1A1A"/>
+        <SolidColorBrush x:Key="SecondaryText" Color="#555555"/>
+        <SolidColorBrush x:Key="AccentColor" Color="#005A9E"/>
         <Style TargetType="Window">
-            <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+            <Setter Property="Background" Value="{DynamicResource WindowBg}"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
-            <Setter Property="FontSize" Value="14"/>
-        </Style>
-        
-        <Style TargetType="TextBlock">
-            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
         </Style>
 
-        <Style TargetType="ComboBox">
-             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-             <Setter Property="Foreground" Value="Black"/> 
-             <Setter Property="BorderThickness" Value="1"/>
-             <Setter Property="Padding" Value="5"/>
-        </Style>
-        
-        <Style TargetType="ListBox">
-             <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-             <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
-             <Setter Property="BorderThickness" Value="1"/>
-             <Setter Property="BorderBrush" Value="#444"/>
+        <Style TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryText}"/>
         </Style>
     </Application.Resources>
 </Application>
