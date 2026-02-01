@@ -217,6 +217,10 @@ public partial class MainWindow : Window
         _hookService.Dispose();
         base.OnClosing(e);
     }
-
+    private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri));
+        e.Handled = true;
     }
+}
 }
